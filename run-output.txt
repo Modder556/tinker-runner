@@ -1,5 +1,5 @@
 ---TINKER-OUTPUT-START---
-Hello from Java — the one that started this
+Hello from C on a real Linux VM
 1 squared is 1
 2 squared is 4
 3 squared is 9
