@@ -1,0 +1,45 @@
+name: tinker-run
+on:
+  workflow_dispatch:
+    inputs:
+      language:
+        description: language id
+        required: true
+      entry:
+        description: entry file
+        required: true
+permissions:
+  contents: write
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run program
+        env:
+          LANG_ID: ${{ github.event.inputs.language }}
+          ENTRY: ${{ github.event.inputs.entry }}
+        run: |
+          set +e
+          {
+            echo "---TINKER-OUTPUT-START---"
+            case "$LANG_ID" in
+              python) python3 "$ENTRY" ;;
+              c)      gcc "$ENTRY" -o /tmp/prog && /tmp/prog ;;
+              cpp)    g++ -std=c++17 "$ENTRY" -o /tmp/prog && /tmp/prog ;;
+              rust)   rustc "$ENTRY" -o /tmp/prog && /tmp/prog ;;
+              go)     go run "$ENTRY" ;;
+              java)   mkdir -p /tmp/jc && javac -d /tmp/jc "$ENTRY" && java -cp /tmp/jc Main ;;
+              *)      echo "unknown language: $LANG_ID" ;;
+            esac
+            echo ""
+            echo "---TINKER-OUTPUT-END---"
+          } > run-output.txt 2>&1
+          echo "----- captured -----"; cat run-output.txt
+      - name: Commit output
+        run: |
+          git config user.name "tinker-bot"
+          git config user.email "tinker-bot@users.noreply.github.com"
+          git add run-output.txt
+          git commit -m "run output [skip ci]" || echo "nothing to commit"
+          git push
