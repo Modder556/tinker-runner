@@ -1,0 +1,52 @@
+---TINKER-OUTPUT-START---
+Manim Community v0.20.1
+
+Animation 0: Create(Square):   0%|          | 0/15 [00:00<?, ?it/s]                                                                   [07/25/26 17:39:44] INFO     Animation 0 : Partial      scene_file_writer.py:601
+                             movie file written in                              
+                             '/home/runner/work/tinker-                         
+                             runner/tinker-runner/runs/                         
+                             8e38cc8b9ams0nksts/media/v                         
+                             ideos/scene/480p15/partial                         
+                             _movie_files/Hello/1584795                         
+                             214_2962155277_223132457.m                         
+                             p4'                                                
+Animation 1: Transform(Square):   0%|          | 0/15 [00:00<?, ?it/s]                                                                                          INFO     Animation 1 : Partial      scene_file_writer.py:601
+                             movie file written in                              
+                             '/home/runner/work/tinker-                         
+                             runner/tinker-runner/runs/                         
+                             8e38cc8b9ams0nksts/media/v                         
+                             ideos/scene/480p15/partial                         
+                             _movie_files/Hello/4072820                         
+                             271_1781680409_557880437.m                         
+                             p4'                                                
+Animation 2: _MethodAnimation(Square):   0%|          | 0/15 [00:00<?, ?it/s]                                                                             [07/25/26 17:39:45] INFO     Animation 2 : Partial      scene_file_writer.py:601
+                             movie file written in                              
+                             '/home/runner/work/tinker-                         
+                             runner/tinker-runner/runs/                         
+                             8e38cc8b9ams0nksts/media/v                         
+                             ideos/scene/480p15/partial                         
+                             _movie_files/Hello/4072820                         
+                             271_716801789_557880437.mp                         
+                             4'                                                 
+                    INFO     Animation 3 : Partial      scene_file_writer.py:601
+                             movie file written in                              
+                             '/home/runner/work/tinker-                         
+                             runner/tinker-runner/runs/                         
+                             8e38cc8b9ams0nksts/media/v                         
+                             ideos/scene/480p15/partial                         
+                             _movie_files/Hello/4072820                         
+                             271_2834709167_2063898442.                         
+                             mp4'                                               
+                    INFO     Combining to Movie file.   scene_file_writer.py:753
+                    INFO                                scene_file_writer.py:904
+                             File ready at                                      
+                             '/home/runner/work/tinker-                         
+                             runner/tinker-runner/runs/                         
+                             8e38cc8b9ams0nksts/media/v                         
+                             ideos/scene/480p15/Hello.m                         
+                             p4'                                                
+                                                                                
+                    INFO     Rendered Hello                         scene.py:278
+                             Played 4 animations                                
+
+---TINKER-OUTPUT-END---
