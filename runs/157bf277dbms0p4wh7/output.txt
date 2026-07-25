@@ -1,0 +1,11 @@
+---TINKER-OUTPUT-START---
+<command-line>: warning: "_FORTIFY_SOURCE" redefined
+<command-line>: note: this is the location of the previous definition
+Hello from COBOL
+01 squared is 0001
+02 squared is 0004
+03 squared is 0009
+04 squared is 0016
+05 squared is 0025
+
+---TINKER-OUTPUT-END---
