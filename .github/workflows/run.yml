@@ -1,0 +1,79 @@
+name: tinker-run
+
+# Every run is isolated in its own folder (runs/<token>/), and the run is
+# stamped with that token via run-name so the client can identify *its* run
+# among many. This is what makes one runner repo safe for a whole classroom.
+run-name: tinker ${{ inputs.token }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      language:
+        description: language id (python, c, cpp, rust, go, java)
+        required: true
+      entry:
+        description: entry file name, e.g. main.c
+        required: true
+      token:
+        description: unique run id
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run program
+        env:
+          LANG_ID: ${{ inputs.language }}
+          ENTRY: ${{ inputs.entry }}
+          TOKEN: ${{ inputs.token }}
+        run: |
+          set +e
+          DIR="runs/$TOKEN"
+          if [ ! -d "$DIR" ]; then
+            mkdir -p "$DIR"
+            echo "no source folder found for this run" > "$DIR/output.txt"
+            exit 0
+          fi
+          cd "$DIR"
+          {
+            echo "---TINKER-OUTPUT-START---"
+            case "$LANG_ID" in
+              python) python3 "$ENTRY" ;;
+              c)      gcc "$ENTRY" -o ./prog && ./prog ;;
+              cpp)    g++ -std=c++17 "$ENTRY" -o ./prog && ./prog ;;
+              rust)   rustc "$ENTRY" -o ./prog && ./prog ;;
+              go)     go run "$ENTRY" ;;
+              java)   mkdir -p ./jc && javac -d ./jc "$ENTRY" && java -cp ./jc Main ;;
+              *)      echo "unknown language: $LANG_ID" ;;
+            esac
+            echo ""
+            echo "---TINKER-OUTPUT-END---"
+          } > output.txt 2>&1
+          rm -f ./prog
+          rm -rf ./jc
+          echo "----- captured -----"; cat output.txt
+
+      - name: Publish output
+        env:
+          TOKEN: ${{ inputs.token }}
+        run: |
+          git config user.name "tinker-bot"
+          git config user.email "tinker-bot@users.noreply.github.com"
+          git add "runs/$TOKEN/output.txt"
+          git commit -m "output $TOKEN [skip ci]" || echo "nothing to commit"
+          # Several people may finish at once - rebase and retry rather than
+          # failing the run (or worse, clobbering someone else's output).
+          for i in 1 2 3 4 5 6; do
+            if git push; then
+              echo "pushed on attempt $i"; break
+            fi
+            echo "push rejected, rebasing (attempt $i)..."
+            git pull --rebase origin main || git rebase --abort
+            sleep $(( (RANDOM % 4) + 1 ))
+          done
