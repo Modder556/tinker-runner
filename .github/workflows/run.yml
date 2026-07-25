@@ -1,22 +1,33 @@
 name: tinker-run
 
-# Every run is isolated in its own folder (runs/<token>/), and the run is
-# stamped with that token via run-name so the client can identify *its* run
-# among many. This is what makes one runner repo safe for a whole classroom.
+# Generic runner. The language isn't hardcoded here - Tinker sends the setup and
+# run commands as inputs, so new languages are added by writing a profile, never
+# by editing this file. That matters because template updates do NOT propagate to
+# repos already created from it.
+#
+# Isolation: each run lives in runs/<token>/ and the run is stamped with that
+# token via run-name, so many people can share one repo safely.
+#
+# Hardening: checkout does not persist credentials, so the program being run
+# cannot read a push token out of .git/config. Only the publish step gets one.
 run-name: tinker ${{ inputs.token }}
 
 on:
   workflow_dispatch:
     inputs:
-      language:
-        description: language id (python, c, cpp, rust, go, java)
-        required: true
       entry:
-        description: entry file name, e.g. main.c
+        description: entry file name
         required: true
       token:
         description: unique run id
         required: true
+      command:
+        description: shell command that runs the program ($ENTRY is the file)
+        required: true
+      setup:
+        description: optional shell command to install a toolchain first
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -24,12 +35,28 @@ permissions:
 jobs:
   run:
     runs-on: ubuntu-latest
+    # A runaway or malicious profile can't tie up a runner for hours.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Prepare toolchain
+        continue-on-error: true
+        env:
+          SETUP: ${{ inputs.setup }}
+        run: |
+          if [ -n "$SETUP" ]; then
+            echo "running setup: $SETUP"
+            eval "$SETUP"
+          else
+            echo "no setup needed"
+          fi
 
       - name: Run program
         env:
-          LANG_ID: ${{ inputs.language }}
+          COMMAND: ${{ inputs.command }}
           ENTRY: ${{ inputs.entry }}
           TOKEN: ${{ inputs.token }}
         run: |
@@ -43,15 +70,7 @@ jobs:
           cd "$DIR"
           {
             echo "---TINKER-OUTPUT-START---"
-            case "$LANG_ID" in
-              python) python3 "$ENTRY" ;;
-              c)      gcc "$ENTRY" -o ./prog && ./prog ;;
-              cpp)    g++ -std=c++17 "$ENTRY" -o ./prog && ./prog ;;
-              rust)   rustc "$ENTRY" -o ./prog && ./prog ;;
-              go)     go run "$ENTRY" ;;
-              java)   mkdir -p ./jc && javac -d ./jc "$ENTRY" && java -cp ./jc Main ;;
-              *)      echo "unknown language: $LANG_ID" ;;
-            esac
+            eval "$COMMAND"
             echo ""
             echo "---TINKER-OUTPUT-END---"
           } > output.txt 2>&1
@@ -62,18 +81,20 @@ jobs:
       - name: Publish output
         env:
           TOKEN: ${{ inputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "tinker-bot"
           git config user.email "tinker-bot@users.noreply.github.com"
-          git add "runs/$TOKEN/output.txt"
+          # add the whole run folder so profiles can return artifacts (mp4, png...)
+          find "runs/$TOKEN" -size +25M -delete 2>/dev/null || true
+          git add "runs/$TOKEN"
           git commit -m "output $TOKEN [skip ci]" || echo "nothing to commit"
-          # Several people may finish at once - rebase and retry rather than
-          # failing the run (or worse, clobbering someone else's output).
+          REMOTE="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           for i in 1 2 3 4 5 6; do
-            if git push; then
+            if git push "$REMOTE" HEAD:main; then
               echo "pushed on attempt $i"; break
             fi
             echo "push rejected, rebasing (attempt $i)..."
-            git pull --rebase origin main || git rebase --abort
+            git pull --rebase "$REMOTE" main || git rebase --abort
             sleep $(( (RANDOM % 4) + 1 ))
           done
