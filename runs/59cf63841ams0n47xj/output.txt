@@ -1,0 +1,4 @@
+---TINKER-OUTPUT-START---
+/home/runner/work/_temp/60f95a26-3f84-4977-9295-5b5fe63e472f.sh: line 11: bf: command not found
+
+---TINKER-OUTPUT-END---
