@@ -1,0 +1,4 @@
+---TINKER-OUTPUT-START---
+Hello World!
+
+---TINKER-OUTPUT-END---
